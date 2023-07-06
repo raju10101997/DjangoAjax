@@ -1,0 +1,122 @@
+<script>
+    // Insert data
+    $('#btnsave').click(function () {
+        console.log("Save button click")
+        output = ""
+        let sid = $('#stuid').val()
+        let nm = $('#nameid').val()
+        let em = $('#emailid').val()
+        let pw = $('#passwordid').val()
+        let csr = $("input[name=csrfmiddlewaretoken").val()
+        console.log(csr, "QQQQQQQQQQQQQQQQQQ")
+        if (nm === '') {
+            console.log("Please enter name")
+        }
+        else if (em === '') {
+            console.log('Please enter email')
+        }
+        else if (pw === '') {
+            console.log('Please enter password')
+        }
+        else {
+            console.log(nm, em, pw)
+            mydata = { stuid: sid, name: nm, email_id: em, password: pw, csrfmiddlewaretoken: csr }
+            $.ajax({
+                url: "{% url 'save' %}",
+                method: "POST",
+                data: mydata,
+                dataType: "json",
+                success: function (data) {
+                    console.log(data, "DATA")
+                    console.log(data.status, "status")
+                    x = data.student_data
+                    console.log(x + "xxxxxxxxxxxxxxx")
+                    if (data.status == "Save") {
+                        $("#msg").text("Form Submitted Successfully")
+                        $("#msg").show()
+                        console.log("Form Submitted Successfully")
+                        for (i = 0; i < x.length; i++) {
+                            output += "<tr><td>" + x[i].id + "</td><td>" + x[i].name + "</td><td>" + x[i].email_id +
+                                "</td><td>" + x[i].password + "</td><td> <input type='button' data-sid=" + x[i].id + " class='btn btn-warning btn-sm btn-edit' value='Edit'>" + "\n" + "<input type='button' data-sid=" + x[i].id + " class='btn btn-danger btn-sm btn-del' value='Delete'></td></tr>"
+                        }
+                        $("#tbody").html(output)
+                        $("form")[0].reset()
+                        $("#stuid").val('')
+                    }
+                    if (data.status == 0) {
+                        console.log("Unable to Save Form")
+                        $("#msg").text("Unable to Save Form")
+                        $("#msg").show()
+                        $("#stuid").val('')
+                        $("form")[0].reset()
+                    }
+                }
+            })
+        }
+    })
+
+
+    // Delete data
+    $("tbody").on("click", ".btn-del", function () {
+        console.log("Delete Button Clicked")
+        console.log(this, "this")
+        let id = $(this).attr("data-sid")
+        let csr = $("input[name=csrfmiddlewaretoken").val()
+        console.log(csr, "CSRF")
+        console.log(id)
+        // OUTPUT
+        // Delete Button Clicked
+        // <input type="button" data-sid="20" class="btn btn-danger btn-sm btn-del" value="Delete"> 'this'
+        // 20
+        //////////////////////////////
+        // mydata = { sid: id }
+        mydata = { sid: id, csrfmiddlewaretoken: csr }
+        mythis = this
+        $.ajax({
+            url: "{% url 'delete' %}",
+            method: "POST",
+            data: mydata,
+            success: function (data) {
+                console.log(data)
+                if (data.status == 1) {
+                    $("#msg").text("Data Deleted Successfully")
+                    $("#msg").show()
+                    console.log("Data Deleted Successfully")
+                    $(mythis).closest("tr").fadeOut()
+                }
+                if (data.status == 0) {
+                    console.log("Unable to Delete Data")
+                    $("#msg").text("Unable to Delete Data")
+                    $("#msg").show()
+                }
+            }
+        })
+
+    })
+
+    // Edit Data
+    $("tbody").on("click", ".btn-edit", function () {
+        console.log("Edit Button Clicked")
+        console.log(this, "this")
+        let id = $(this).attr("data-sid")
+        let csr = $("input[name=csrfmiddlewaretoken").val()
+        console.log(csr, "CSRF")
+        console.log(id)
+
+        mydata = { sid: id, csrfmiddlewaretoken: csr }
+        mythis = this
+        $.ajax({
+            url: "{% url 'edit' %}",
+            method: "POST",
+            data: mydata,
+            success: function (data) {
+                console.log(data)
+                $("#stuid").val(data.id)
+                $("#emailid").val(data.email_id)
+                $("#nameid").val(data.name)
+                $("#passwordid").val(data.password)
+            }
+        })
+
+    })
+</script>
